@@ -35,15 +35,11 @@ VR* VR::instance;
 uint8_t vr_buf[32];
 uint8_t hextab[17]="0123456789ABCDEF";
 
-/**
-	@brief VR class constructor.
-	@param receivePin --> software serial RX
-		   transmitPin --> software serial TX
-*/
-VR::VR(uint8_t receivePin, uint8_t transmitPin) : SoftwareSerial(receivePin, transmitPin)
+
+VR::VR(Stream& stream)
 {
+	_serial = &stream;
 	instance = this;
-	SoftwareSerial::begin(38400);
 }
 
 /**
@@ -1137,15 +1133,15 @@ int VR :: writehex(uint8_t *buf, uint8_t len)
 */
 void VR :: send_pkt(uint8_t cmd, uint8_t subcmd, uint8_t *buf, uint8_t len)
 {
-	while(available()){
-		read();// replace flush();
+	while(_serial->available()){
+		_serial->read();// replace flush();
 	}
-	write(FRAME_HEAD);
-	write(len+3);
-	write(cmd);
-	write(subcmd);
-	write(buf, len);
-	write(FRAME_END);
+	_serial->write(FRAME_HEAD);
+	_serial->write(len+3);
+	_serial->write(cmd);
+	_serial->write(subcmd);
+	_serial->write(buf, len);
+	_serial->write(FRAME_END);
 }
 
 /**
@@ -1156,14 +1152,14 @@ void VR :: send_pkt(uint8_t cmd, uint8_t subcmd, uint8_t *buf, uint8_t len)
 */
 void VR :: send_pkt(uint8_t cmd, uint8_t *buf, uint8_t len)
 {
-	while(available()){
-		read();// replace flush();
+	while(_serial->available()){
+		_serial->read();// replace flush();
 	}
-	write(FRAME_HEAD);
-	write(len+2);
-	write(cmd);
-	write(buf, len);
-	write(FRAME_END);
+	_serial->write(FRAME_HEAD);
+	_serial->write(len+2);
+	_serial->write(cmd);
+	_serial->write(buf, len);
+	_serial->write(FRAME_END);
 }
 
 /**
@@ -1173,13 +1169,13 @@ void VR :: send_pkt(uint8_t cmd, uint8_t *buf, uint8_t len)
 */
 void VR :: send_pkt(uint8_t *buf, uint8_t len)
 {
-	while(available()){
-		read();// replace flush();
+	while(_serial->available()){
+		_serial->read();// replace flush();
 	}
-	write(FRAME_HEAD);
-	write(len+1);
-	write(buf, len);
-	write(FRAME_END);
+	_serial->write(FRAME_HEAD);
+	_serial->write(len+1);
+	_serial->write(buf, len);
+	_serial->write(FRAME_END);
 }
 
 /**
@@ -1228,7 +1224,7 @@ int VR::receive(uint8_t *buf, int len, uint16_t timeout)
   while (read_bytes < len) {
     start_millis = millis();
     do {
-      ret = read();
+      ret = _serial->read();
       if (ret >= 0) {
         break;
      }
